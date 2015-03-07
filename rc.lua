@@ -9,6 +9,7 @@ local wibox = require("wibox")
 local beautiful = require("beautiful")
 -- Notification library
 local naughty = require("naughty")
+local acpi = require("acpi_control")
 
 -- {{{ Error handling
 -- Check if awesome encountered an error during startup and fell back to
@@ -174,13 +175,12 @@ globalkeys = awful.util.table.join(
     awful.key({ modkey,           }, "d", function () awful.util.spawn("dmenu_run") end),
     awful.key({ modkey,           }, "t", function () awful.util.spawn(terminal) end),
 
-    --TODO: add notification in a later stage
-    awful.key({}, "XF86AudioRaiseVolume", function () awful.util.spawn("amixer -c 0 -q set Master 2dB+") end),
-    awful.key({}, "XF86AudioLowerVolume", function () awful.util.spawn("amixer -c 0 -q set Master 2dB-") end),
-    awful.key({}, "XF86AudioMute", function () awful.util.spawn("amixer -D pulse set Master toggle") end),
+    awful.key({}, "XF86AudioRaiseVolume", function() acpi.increase_volume() end),
+    awful.key({}, "XF86AudioLowerVolume", function() acpi.decrease_volume() end),
+    awful.key({}, "XF86AudioMute", function() acpi.toggle_volume() end),
 
-    awful.key({}, "XF86MonBrightnessDown", function () awful.util.spawn("xbacklight -dec 7") end),
-    awful.key({}, "XF86MonBrightnessUp", function () awful.util.spawn("xbacklight -inc 10") end),
+    awful.key({}, "XF86MonBrightnessDown", function () acpi.decrease_brightness() end),
+    awful.key({}, "XF86MonBrightnessUp", function () acpi.increase_brightness() end),
 
     awful.key({ modkey,           }, "j",
         function ()
@@ -308,18 +308,11 @@ awful.rules.rules = {
                      border_color = beautiful.border_normal,
                      focus = awful.client.focus.filter,
                      raise = true,
-                    size_hints_honor = false,
+                     size_hints_honor = false,
                      keys = clientkeys,
                      buttons = clientbuttons } },
-    { rule = { class = "MPlayer" },
-      properties = { floating = true } },
-    { rule = { class = "pinentry" },
-      properties = { floating = true } },
     { rule = { class = "gimp" },
-      properties = { floating = true } },
-    -- Set Firefox to always map on tags number 2 of screen 1.
-    -- { rule = { class = "Firefox" },
-    --   properties = { tag = tags[1][2] } },
+      properties = { floating = true } }
 }
 -- }}}
 
@@ -404,6 +397,7 @@ end
 
 run_once("nm-applet")
 run_once("cbatticon")
+run_once("redshift-gtk")
 -- }}}
 
 client.connect_signal("focus", function(c) c.border_color = beautiful.border_focus end)
