@@ -41,7 +41,7 @@ end
 beautiful.init(os.getenv("HOME") .. "/.config/awesome/themes/blackburn/theme.lua")
 
 -- This is used later as the default terminal and editor to run.
-terminal = "terminator"
+terminal = "qterminal"
 editor = "vim"
 editor_cmd = "gvim"
 
@@ -397,7 +397,9 @@ end
 
 run_once("nm-applet")
 run_once("cbatticon")
+run_once("volumeicon")
 run_once("redshift-gtk")
+run_once("numlockx on")
 -- }}}
 
 client.connect_signal("focus", function(c) c.border_color = beautiful.border_focus end)

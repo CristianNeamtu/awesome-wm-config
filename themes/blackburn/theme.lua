@@ -8,7 +8,7 @@
 theme                               = {}
 
 theme.dir                           = os.getenv("HOME") .. "/.config/awesome/themes/blackburn"
-theme.wallpaper                     = theme.dir .. "/wall.png"
+theme.wallpaper                     = theme.dir .. "/wallpaper.jpg"
 theme.topbar_path                   = "png:" .. theme.dir .. "/icons/topbar/"
 
 theme.font                          = "Tamsyn 10.5"
