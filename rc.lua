@@ -80,7 +80,7 @@ end
 
 -- {{{ Wibox
 -- Create a textclock widget
-mytextclock = awful.widget.textclock("%H:%M %d %m %y ",60)
+mytextclock = awful.widget.textclock("%H:%M %d/%m/%Y ",60)
 mysystray = wibox.widget.systray()
 
 -- Create a wibox for each screen and add it
@@ -192,7 +192,6 @@ globalkeys = awful.util.table.join(
             awful.client.focus.byidx(-1)
             if client.focus then client.focus:raise() end
         end),
-    awful.key({ modkey,           }, "w", function () mymainmenu:show() end),
 
     -- Layout manipulation
     awful.key({ modkey, "Shift"   }, "j", function () awful.client.swap.byidx(  1)    end),
