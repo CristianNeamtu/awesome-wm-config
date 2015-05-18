@@ -9,31 +9,16 @@ local wibox = require("wibox")
 local beautiful = require("beautiful")
 -- Notification library
 local naughty = require("naughty")
+
 local acpi = require("acpi_control")
+local init = require("autorun")
+local const = require("constants")
+local err = require("error")
+
 
 -- {{{ Error handling
--- Check if awesome encountered an error during startup and fell back to
--- another config (This code will only ever execute for the fallback config)
-if awesome.startup_errors then
-    naughty.notify({ preset = naughty.config.presets.critical,
-                     title = "Oops, there were errors during startup!",
-                     text = awesome.startup_errors })
-end
-
--- Handle runtime errors after startup
-do
-    local in_error = false
-    awesome.connect_signal("debug::error", function (err)
-        -- Make sure we don't go into an endless error loop
-        if in_error then return end
-        in_error = true
-
-        naughty.notify({ preset = naughty.config.presets.critical,
-                         title = "Oops, an error happened!",
-                         text = err })
-        in_error = false
-    end)
-end
+-- Check if awesome encountered an error during startup and fell back to default
+err.handle_errors()
 -- }}}
 
 -- {{{ Variable definitions
@@ -41,12 +26,12 @@ end
 beautiful.init(os.getenv("HOME") .. "/.config/awesome/themes/blackburn/theme.lua")
 
 -- This is used later as the default terminal and editor to run.
-terminal = "qterminal"
-editor = "vim"
-editor_cmd = "gvim"
+terminal = const.terminal
+editor = const.editor
+editor_cmd = const.editor_cmd
 
 -- Default modkey.
-modkey = "Mod4"
+modkey = const.modKey
 
 -- Table of layouts to cover with awful.layout.inc, order matters.
 local layouts =
@@ -172,19 +157,19 @@ globalkeys = awful.util.table.join(
     awful.key({ modkey,           }, "Right",  awful.tag.viewnext       ),
     awful.key({ modkey,           }, "Escape", awful.tag.history.restore),
 
-    awful.key({ modkey,           }, "d", function () awful.util.spawn("dmenu_run") end),
+    awful.key({ modkey,           }, "d", function () init.menubar() end),
     awful.key({ modkey,           }, "t", function () awful.util.spawn(terminal) end),
 
-    awful.key({}, "XF86AudioRaiseVolume", function() acpi.increase_volume() end),
-    awful.key({}, "XF86AudioLowerVolume", function() acpi.decrease_volume() end),
-    awful.key({}, "XF86AudioMute", function() acpi.toggle_volume() end),
+    awful.key({}, "XF86AudioRaiseVolume",   function() acpi.increase_volume() end),
+    awful.key({}, "XF86AudioLowerVolume",   function() acpi.decrease_volume() end),
+    awful.key({}, "XF86AudioMute",          function() acpi.toggle_volume() end),
 
-    awful.key({}, "XF86MonBrightnessDown", function () acpi.decrease_brightness() end),
-    awful.key({}, "XF86MonBrightnessUp", function () acpi.increase_brightness() end),
+    awful.key({}, "XF86MonBrightnessDown",  function () acpi.decrease_brightness() end),
+    awful.key({}, "XF86MonBrightnessUp",    function () acpi.increase_brightness() end),
 
     awful.key({ modkey,           }, "j",
         function ()
-            awful.client.focus.byidx( 1)
+            awful.client.focus.byidx(1)
             if client.focus then client.focus:raise() end
         end),
     awful.key({ modkey,           }, "k",
@@ -385,20 +370,7 @@ client.connect_signal("manage", function (c, startup)
 end)
 
 -- {{{ Autostart applications
-function run_once(cmd)
-    findme = cmd
-    firstspace = cmd:find(" ")
-    if firstspace then
-        findme = cmd:sub(0, firstspace-1)
-    end
-    awful.util.spawn_with_shell("pgrep -u $USER -x " .. findme .. " > /dev/null || (" .. cmd .. ")")
-end
-
-run_once("nm-applet")
-run_once("cbatticon")
-run_once("volumeicon")
-run_once("redshift-gtk")
-run_once("numlockx on")
+    init.autostart()
 -- }}}
 
 client.connect_signal("focus", function(c) c.border_color = beautiful.border_focus end)
