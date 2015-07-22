@@ -166,6 +166,7 @@ globalkeys = awful.util.table.join(
 
     awful.key({}, "XF86MonBrightnessDown",  function () acpi.decrease_brightness() end),
     awful.key({}, "XF86MonBrightnessUp",    function () acpi.increase_brightness() end),
+    awful.key({}, "XF86TouchpadToggle",     function () acpi.toggle_touchpad() end),
 
     awful.key({ modkey,           }, "j",
         function ()
