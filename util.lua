@@ -1,4 +1,3 @@
-
 local module = { }
 
 function module.get_output(command)
@@ -7,6 +6,10 @@ function module.get_output(command)
     result = string.gsub(result, "\n", "")
     handle:close()
     return result
+end
+
+function joinTables(t1, t2)
+    for k,v in ipairs(t2) do table.insert(t1, v) end return t1
 end
 
 return module

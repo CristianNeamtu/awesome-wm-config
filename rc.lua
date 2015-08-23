@@ -14,7 +14,8 @@ local acpi = require("acpi_control")
 local init = require("autorun")
 local const = require("constants")
 local err = require("error")
-
+local manager = require("manager")
+local cal = require("widgets.calendar")
 
 -- {{{ Error handling
 -- Check if awesome encountered an error during startup and fell back to default
@@ -24,25 +25,21 @@ err.handle_errors()
 -- {{{ Variable definitions
 -- Themes define colours, icons, font and wallpapers.
 beautiful.init(os.getenv("HOME") .. "/.config/awesome/themes/blackburn/theme.lua")
+-- }}}
 
--- This is used later as the default terminal and editor to run.
-terminal = const.terminal
-editor = const.editor
-editor_cmd = const.editor_cmd
-
--- Default modkey.
 modkey = const.modKey
+altkey = "Mod1"
 
 -- Table of layouts to cover with awful.layout.inc, order matters.
 local layouts =
 {
-    awful.layout.suit.spiral,
-    awful.layout.suit.max,
-    awful.layout.suit.floating,
     awful.layout.suit.tile,
     awful.layout.suit.tile.left,
+    awful.layout.suit.spiral,
+    awful.layout.suit.spiral.dwindle,
+    awful.layout.suit.max,
+    awful.layout.suit.floating,
     awful.layout.suit.fair,
-    awful.layout.suit.spiral.dwindle
 }
 -- }}}
 
@@ -65,57 +62,60 @@ end
 
 -- {{{ Wibox
 -- Create a textclock widget
-mytextclock = awful.widget.textclock("%H:%M %d/%m/%Y ",60)
-mysystray = wibox.widget.systray()
+clock_widget = awful.widget.textclock("%H:%M %d/%m/%Y ",60)
+cal.register(clock_widget, "<span foreground=\"white\">%s</span>")
+
+system_tray = wibox.widget.systray()
 
 -- Create a wibox for each screen and add it
 mywibox = {}
 mylayoutbox = {}
 mytaglist = {}
 mytaglist.buttons = awful.util.table.join(
-                    awful.button({ }, 1, awful.tag.viewonly),
-                    awful.button({ modkey }, 1, awful.client.movetotag),
-                    awful.button({ }, 3, awful.tag.viewtoggle),
-                    awful.button({ modkey }, 3, awful.client.toggletag),
-                    awful.button({ }, 4, function(t) awful.tag.viewnext(awful.tag.getscreen(t)) end),
-                    awful.button({ }, 5, function(t) awful.tag.viewprev(awful.tag.getscreen(t)) end)
-                    )
+    awful.button({ }, 1, awful.tag.viewonly),
+    awful.button({ modkey }, 1, awful.client.movetotag),
+    awful.button({ }, 3, awful.tag.viewtoggle),
+    awful.button({ modkey }, 3, awful.client.toggletag),
+    awful.button({ }, 4, function(t) awful.tag.viewnext(awful.tag.getscreen(t)) end),
+    awful.button({ }, 5, function(t) awful.tag.viewprev(awful.tag.getscreen(t)) end)
+    )
+
 mytasklist = {}
 mytasklist.buttons = awful.util.table.join(
-                     awful.button({ }, 1, function (c)
-                                              if c == client.focus then
-                                                  c.minimized = true
-                                              else
-                                                  -- Without this, the following
-                                                  -- :isvisible() makes no sense
-                                                  c.minimized = false
-                                                  if not c:isvisible() then
-                                                      awful.tag.viewonly(c:tags()[1])
-                                                  end
-                                                  -- This will also un-minimize
-                                                  -- the client, if needed
-                                                  client.focus = c
-                                                  c:raise()
-                                              end
-                                          end),
-                     awful.button({ }, 3, function ()
-                                              if instance then
-                                                  instance:hide()
-                                                  instance = nil
-                                              else
-                                                  instance = awful.menu.clients({
-                                                      theme = { width = 250 }
-                                                  })
-                                              end
-                                          end),
-                     awful.button({ }, 4, function ()
-                                              awful.client.focus.byidx(1)
-                                              if client.focus then client.focus:raise() end
-                                          end),
-                     awful.button({ }, 5, function ()
-                                              awful.client.focus.byidx(-1)
-                                              if client.focus then client.focus:raise() end
-                                          end))
+    awful.button({ }, 1, function (c)
+                          if c == client.focus then
+                              c.minimized = true
+                          else
+                              -- Without this, the following
+                              -- :isvisible() makes no sense
+                              c.minimized = false
+                              if not c:isvisible() then
+                                  awful.tag.viewonly(c:tags()[1])
+                              end
+                              -- This will also un-minimize
+                              -- the client, if needed
+                              client.focus = c
+                              c:raise()
+                          end
+                      end),
+    awful.button({ }, 3, function ()
+                          if instance then
+                              instance:hide()
+                              instance = nil
+                          else
+                              instance = awful.menu.clients({
+                                  theme = { width = 250 }
+                              })
+                          end
+                      end),
+    awful.button({ }, 4, function ()
+                          awful.client.focus.byidx(1)
+                          if client.focus then client.focus:raise() end
+                      end),
+    awful.button({ }, 5, function ()
+                          awful.client.focus.byidx(-1)
+                          if client.focus then client.focus:raise() end
+                      end))
 
 for s = 1, screen.count() do
     -- Create an imagebox widget which will contains an icon indicating which layout we're using.
@@ -137,8 +137,8 @@ for s = 1, screen.count() do
 
     -- Widgets that are aligned to the right
     local right_layout = wibox.layout.fixed.horizontal()
-    right_layout:add(mysystray)
-    right_layout:add(mytextclock)
+    right_layout:add(system_tray)
+    right_layout:add(clock_widget)
     right_layout:add(mylayoutbox[s])
 
     -- Now bring it all together (with the tasklist in the middle)
@@ -157,27 +157,25 @@ globalkeys = awful.util.table.join(
     awful.key({ modkey,           }, "Right",  awful.tag.viewnext       ),
     awful.key({ modkey,           }, "Escape", awful.tag.history.restore),
 
-    awful.key({ modkey,           }, "d", function () init.menubar() end),
-    awful.key({ modkey,           }, "t", function () awful.util.spawn(terminal) end),
+    awful.key({ modkey,           }, "d", init.menubar),
+    awful.key({ modkey,           }, "t", function () awful.util.spawn(const.terminal) end),
 
-    awful.key({}, "XF86AudioRaiseVolume",   function() acpi.increase_volume() end),
-    awful.key({}, "XF86AudioLowerVolume",   function() acpi.decrease_volume() end),
-    awful.key({}, "XF86AudioMute",          function() acpi.toggle_volume() end),
+    awful.key({}, "XF86AudioRaiseVolume",   acpi.increase_volume),
+    awful.key({}, "XF86AudioLowerVolume",   acpi.decrease_volume),
+    awful.key({}, "XF86AudioMute",          acpi.toggle_volume),
 
-    awful.key({}, "XF86MonBrightnessDown",  function () acpi.decrease_brightness() end),
-    awful.key({}, "XF86MonBrightnessUp",    function () acpi.increase_brightness() end),
-    awful.key({}, "XF86TouchpadToggle",     function () acpi.toggle_touchpad() end),
+    awful.key({}, "XF86WWW",                function() awful.util.spawn(const.browser) end),
+    awful.key({}, "XF86Mail",               function() awful.util.spawn(const.mail_client) end),
 
-    awful.key({ modkey,           }, "j",
-        function ()
-            awful.client.focus.byidx(1)
-            if client.focus then client.focus:raise() end
-        end),
-    awful.key({ modkey,           }, "k",
-        function ()
-            awful.client.focus.byidx(-1)
-            if client.focus then client.focus:raise() end
-        end),
+
+    awful.key({}, "XF86MonBrightnessDown",  acpi.decrease_brightness),
+    awful.key({}, "XF86MonBrightnessUp",    acpi.increase_brightness),
+    awful.key({}, "XF86TouchpadToggle",     acpi.toggle_touchpad),
+
+    awful.key({ altkey, "Control" }, "l", function() awful.util.spawn("xscreensaver-command -lock") end),
+
+    awful.key({ modkey,           }, "j",   function () manager.change_focus(1) end),
+    awful.key({ modkey,           }, "k",   function () manager.change_focus(-1) end),
 
     -- Layout manipulation
     awful.key({ modkey, "Shift"   }, "j", function () awful.client.swap.byidx(  1)    end),
@@ -185,19 +183,13 @@ globalkeys = awful.util.table.join(
     awful.key({ modkey, "Control" }, "j", function () awful.screen.focus_relative( 1) end),
     awful.key({ modkey, "Control" }, "k", function () awful.screen.focus_relative(-1) end),
     awful.key({ modkey,           }, "u", awful.client.urgent.jumpto),
-    awful.key({ modkey,           }, "Tab",
-        function ()
-            awful.client.focus.history.previous()
-            if client.focus then
-                client.focus:raise()
-            end
-        end),
+    awful.key({ modkey,           }, "Tab", manager.previous),
 
     -- Standard program
-    awful.key({ modkey,           }, "Return", function () awful.util.spawn(terminal) end),
-    awful.key({ modkey, "Control" }, "r", awesome.restart),
-    awful.key({ modkey, "Shift"   }, "q", awesome.quit),
-
+    awful.key({ modkey,           }, "Return", function () awful.util.spawn(const.terminal) end),
+    awful.key({ modkey, "Control" }, "r",     awesome.restart),
+    awful.key({ modkey, "Shift"   },   "q",     awesome.quit),
+    awful.key({ modkey, "Control" }, "q",     function () awful.util.spawn("sh "..os.getenv("HOME") .. "/.config/awesome/shutdown_dialog.sh") end),
     awful.key({ modkey,           }, "l",     function () awful.tag.incmwfact( 0.05)    end),
     awful.key({ modkey,           }, "h",     function () awful.tag.incmwfact(-0.05)    end),
     awful.key({ modkey, "Shift"   }, "h",     function () awful.tag.incnmaster( 1)      end),
@@ -225,6 +217,11 @@ clientkeys = awful.util.table.join(
         end),
     awful.key({ modkey,           }, "m",
         function (c)
+            c.maximized_horizontal = not c.maximized_horizontal
+            c.maximized_vertical   = not c.maximized_vertical
+        end),
+    awful.key({ modkey, "Shift"}, "m",
+        function(c)
             c.maximized_horizontal = not c.maximized_horizontal
             c.maximized_vertical   = not c.maximized_vertical
         end)
@@ -297,7 +294,12 @@ awful.rules.rules = {
                      keys = clientkeys,
                      buttons = clientbuttons } },
     { rule = { class = "gimp" },
-      properties = { floating = true } }
+      properties = { floating = true } },
+    { rule = { class = "steam" },
+      properties = { floating = true } },
+
+    { rule = { instance = "plugin-container" },
+      properties = { floating = true } },
 }
 -- }}}
 

@@ -13,7 +13,7 @@ function module.increase_volume()
 end
 
 function module.decrease_volume()
-    awful.util.spawn("amixer -c 0 -q set Master 2dB-")
+    awful.util.spawn("amixer -c 0 -q set Master 3dB-")
 end
 
 function module.toggle_volume()
@@ -26,30 +26,10 @@ end
 
 function module.decrease_brightness()
     awful.util.spawn("xbacklight -dec 10")
-    local result = util.get_output("xbacklight")
-    naughty.notify(
-        {
-            text = "Value: "..result,
-            title = "Brightness",
-            position = "top_right",
-            timeout = 0.3
-        }
-    )
-
 end
 
 function module.increase_brightness()
     awful.util.spawn("xbacklight -inc 10")
-    local result = util.get_output("xbacklight")
-    naughty.notify(
-        {
-            text = "Value: "..result,
-            title = "Brightness",
-            position = "top_right",
-            timeout = 0.3
-        }
-    )
-
 end
 
 ---------------------------------------------------
