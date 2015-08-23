@@ -8,7 +8,8 @@
 theme                               = {}
 
 theme.dir                           = os.getenv("HOME") .. "/.config/awesome/themes/blackburn"
-theme.wallpaper                     = theme.dir .. "/wallpaper.jpg"
+theme.wallpaper_dir                 = os.getenv("HOME") .. "/.config/awesome/wallpaper"
+theme.wallpaper                     = theme.wallpaper_dir .. "/"..(os.time() % 2 + 1)..".jpg"
 theme.topbar_path                   = "png:" .. theme.dir .. "/icons/topbar/"
 
 theme.font                          = "Ubuntu 10.5"
